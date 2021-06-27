@@ -1,2 +1,2 @@
 *.txt
-.terraform/
+vpc/.terraform/
