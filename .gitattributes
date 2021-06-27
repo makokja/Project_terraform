@@ -1,0 +1,1 @@
+vpc/.terraform/plugins/registry.terraform.io/hashicorp/aws/3.47.0/darwin_amd64/terraform-provider-aws_v3.47.0_x5 filter=lfs diff=lfs merge=lfs -text
