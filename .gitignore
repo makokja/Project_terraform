@@ -1,2 +1,2 @@
 *.txt
-vpc/.terraform/
+terraform-provider-aws_v3.47.0_x5
