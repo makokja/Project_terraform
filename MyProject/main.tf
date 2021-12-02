@@ -7,6 +7,7 @@ terraform {
   }
 }
 #configured the aws provider
+#no specific secret key and access key here becuase we configuired in aws cli
 provider "aws" {
     region     = "ap-southeast-1" 
 }
@@ -85,17 +86,90 @@ resource "aws_route_table_association" "Project_Associate" {
     route_table_id = aws_route_table.Project_RouteTable.id 
 }
 
-#create aws ec2 instance
-/*
-resource "aws_instance" "DemoResource" {
+#create aws ec2 instance when Jenkins install #Creation complete after 1m4s
+resource "aws_instance" "ProjectInstance" {
     ami           = var.ami
     instance_type = var.instance_type
     key_name = "EC2"
     vpc_security_group_ids = [aws_security_group.Project_Sec_Group.id]
     subnet_id = aws_subnet.Project-Subnet1.id
-    associate_public_ip_address = true /*allow connect via pubilc ip
+    associate_public_ip_address = true #allow connect via pubilc ip
+    user_data = file("./installJenkins.sh")  #install jenkins using shell script check Cloud-init at /var/log to see if it completed
     tags = {
-        Name = "DemoInstance"
+        Name = "Jenkins-Server"
     }
-}*/
+}
+
+# Create an AWS EC2 Instance to host Ansible Controller (Control node)
+# Creation complete after 43s
+resource "aws_instance" "AnsibleController" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  key_name = "EC2"
+  vpc_security_group_ids = [aws_security_group.Project_Sec_Group.id]
+  subnet_id = aws_subnet.Project-Subnet1.id
+  associate_public_ip_address = true
+  user_data = file("./installAnsibleCN.sh")
+
+  tags = {
+    Name = "Ansible-ControlNode"
+  }
+}
+
+# Create an AWS EC2 Instance to host Ansible Manage Node1 to host apache tomcat
+# aws_instance.AnsibleManageNode1: Creation complete after 54s 
+resource "aws_instance" "AnsibleManageNode1" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  key_name = "EC2"
+  vpc_security_group_ids = [aws_security_group.Project_Sec_Group.id]
+  subnet_id = aws_subnet.Project-Subnet1.id
+  associate_public_ip_address = true
+  user_data = file("./ansibleManagedNode.sh")
+
+  tags = {
+    Name = "AnsibleMN-ApacheTomcat"
+  }
+}
+# Create an AWS EC2 Instance  Ansible Managed Node2 to host Docker
+# aws_instance.DockerHost: Creation complete after 1m4s 
+resource "aws_instance" "DockerHost" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  key_name = "EC2"
+  vpc_security_group_ids = [aws_security_group.Project_Sec_Group.id]
+  subnet_id = aws_subnet.Project-Subnet1.id
+  associate_public_ip_address = true
+  user_data = file("./docker.sh")
+
+  tags = {
+    Name = "AnsibleMN-DockerHost"
+  }
+}
+
+# Create an AWS EC2 Instance to host Sonatype Nexus
+# aws_instance.Nexus: Creation complete after 54s 
+resource "aws_instance" "Nexus" {
+  ami           = var.ami
+  instance_type = var.instance_type_nexus
+  key_name = "EC2"
+  vpc_security_group_ids = [aws_security_group.Project_Sec_Group.id]
+  subnet_id = aws_subnet.Project-Subnet1.id
+  associate_public_ip_address = true
+  user_data = file("./installNexus.sh")
+
+  tags = {
+    Name = "Nexus-Server"
+  }
+}
+
+# #assign Elastic IP
+# resource "aws_eip" "ProjectInstanceEIP" {
+#   instance = aws_instance.ProjectInstance.id
+#   vpc      = true
+
+#   tags = {
+#       Name = "ProjectInstanceEIP"
+#   }
+# }
 
